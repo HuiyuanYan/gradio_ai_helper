@@ -1,3 +1,5 @@
+!!!**本项目计划用作xjtu 2024秋 数据库系统原理及应用大作业，使用时请注意甄别。**
+
 # 安装虚拟环境
 ```bash
 conda create -n ai_helper python=3.12
