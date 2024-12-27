@@ -1,12 +1,4 @@
-# 100行代码实现私人定制多模态RAG机器人
-
-​
-
-# 项目名称：私人定制多模态RAG机器人
-
-报告日期：2024年8月18日
-
-项目负责人：Bilyc（WsWs）
+# ==直接看第三部分的“实施步骤”==
 
 # 一、项目概述
 
@@ -58,65 +50,88 @@ miniconda官网地址：[https://docs.conda.io/en/latest/miniconda.html](https:/
 
     conda create --name ai_endpoint python=3.8.1
 
-![](data\:image/gif;base64,R0lGODlhAQABAPABAP///wAAACH5BAEKAAAALAAAAAABAAEAAAICRAEAOw== "点击并拖拽以移动")
+
 
 进入虚拟环境
 
     conda activate ai_endpoint
 
-![](data\:image/gif;base64,R0lGODlhAQABAPABAP///wAAACH5BAEKAAAALAAAAAABAAEAAAICRAEAOw== "点击并拖拽以移动")
+
 
 安装nvidia\_ai\_endpoint工具
 
     pip install langchain-nvidia-ai-endpoints
 
-![](data\:image/gif;base64,R0lGODlhAQABAPABAP///wAAACH5BAEKAAAALAAAAAABAAEAAAICRAEAOw== "点击并拖拽以移动")
+
 
 安装Jupyter Lab
 
     pip install jupyterlab
 
-![](data\:image/gif;base64,R0lGODlhAQABAPABAP///wAAACH5BAEKAAAALAAAAAABAAEAAAICRAEAOw== "点击并拖拽以移动")
+
 
 安装langchain\_core
 
     pip install langchain_core
 
-![](data\:image/gif;base64,R0lGODlhAQABAPABAP///wAAACH5BAEKAAAALAAAAAABAAEAAAICRAEAOw== "点击并拖拽以移动")
+
 
 安装langchain和langchain\_community
 
     pip install langchain
 
-![](data\:image/gif;base64,R0lGODlhAQABAPABAP///wAAACH5BAEKAAAALAAAAAABAAEAAAICRAEAOw== "点击并拖拽以移动")
+
 
     pip install –U langchain_community
 
-![](data\:image/gif;base64,R0lGODlhAQABAPABAP///wAAACH5BAEKAAAALAAAAAABAAEAAAICRAEAOw== "点击并拖拽以移动")
+
 
 安装matplotlib
 
     pip install matplotlib
 
-![](data\:image/gif;base64,R0lGODlhAQABAPABAP///wAAACH5BAEKAAAALAAAAAABAAEAAAICRAEAOw== "点击并拖拽以移动")
+
 
 安装Numpy
 
     pip install numpy
 
-![](data\:image/gif;base64,R0lGODlhAQABAPABAP///wAAACH5BAEKAAAALAAAAAABAAEAAAICRAEAOw== "点击并拖拽以移动")
+
 
 安装faiss
 
     pip install faiss-cpu==1.7.2
 
-![](data\:image/gif;base64,R0lGODlhAQABAPABAP///wAAACH5BAEKAAAALAAAAAABAAEAAAICRAEAOw== "点击并拖拽以移动")
+
 
 安装OPENAI库
 
     pip install openai
 
-![](data\:image/gif;base64,R0lGODlhAQABAPABAP///wAAACH5BAEKAAAALAAAAAABAAEAAAICRAEAOw== "点击并拖拽以移动")
+
+
+安装gradio
+
+    pip install gradio
+
+
+
+安装azure
+
+    pip install azure-cognitiveservices-vision-computervision
+
+
+
+安装transformers
+
+    pip install transformers
+
+
+
+安装whisper
+
+    pip install openai-whisper
+
 
 ### **2.Macbook 环境**
 
@@ -124,138 +139,17 @@ Macbook也可以按照上面的步骤同样执行, 只是在下载Miniconda的�
 
 ## （二）代码实现
 
-直接上干货仅，有100行左右。
+直接看`mian.py`，运行：`Python main.py`
 
-```
-import os
-from langchain.vectorstores import FAISS
-from langchain_core.output_parsers import StrOutputParser
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.runnables import RunnablePassthrough
-from langchain.text_splitter import CharacterTextSplitter
-from langchain_nvidia_ai_endpoints import ChatNVIDIA, NVIDIAEmbeddings
-import gradio as gr
-import base64
-from IPython.display import HTML, display
+## （三）NVIDIA NIM API获取方式
 
-nvapi_key = "nvapi-（请在Nvdia NIM平台申请你自己的API_KEY）"
-os.environ["NVIDIA_API_KEY"] = nvapi_key
+网址：[phi-3-small-128k-instruct Model by Microsoft | NVIDIA NIM](https://build.nvidia.com/microsoft/phi-3-small-128k-instruct)
+
+![image-20241227132916286](https://wangguijie-typora.oss-cn-chengdu.aliyuncs.com/img/image-20241227132916286.png)
+
+点击“Get API Key”获取API key
 
 
-def process_text(file, user_prompt):
-    # 处理txt文本输入
-    # 指定LLM模型
-    llm = ChatNVIDIA(model="microsoft/phi-3-small-128k-instruct", nvidia_api_key=nvapi_key, max_tokens=512)
-    result = llm.invoke(user_prompt)
-    html = '<ul>'
-    for doc in result:
-        html += f'<li>{doc}</li>'
-    html += '</ul>'
-    # 指定文本向量化模型
-    embedder = NVIDIAEmbeddings(model="ai-embed-qa-4")
-    # 读取数据文件
-    data = []
-    sources = []
-    if file.endswith('.txt'):
-        with open(file, encoding="utf-8") as f:
-            lines = f.readlines()
-            for line in lines:
-                if len(line) >= 1:
-                    data.append(line)
-                    sources.append(file)
-    # 进行一些基本的清理并删除空行
-    documents = [d for d in data if d != '']
-    # 文本存为本地向量数据库
-    text_splitter = CharacterTextSplitter(chunk_size=400, separator=" ")
-    docs = []
-    metadatas = []
-
-    for i, d in enumerate(documents):
-        splits = text_splitter.split_text(d)
-        docs.extend(splits)
-        metadatas.extend([{"source": sources[i]}] * len(splits))
-    store = FAISS.from_texts(docs, embedder, metadatas=metadatas)
-    store.save_local('./zh_data/nv_embedding')
-    # 读取向量数据库
-    store = FAISS.load_local("./zh_data/nv_embedding", embedder, allow_dangerous_deserialization=True)
-    # 提出问题并基于phi-3-small-128k-instruct模型进行RAG检索
-    retriever = store.as_retriever()
-
-    prompt = ChatPromptTemplate.from_messages(
-        [
-            (
-                "system",
-                "Answer solely based on the following context:\n<Documents>\n{context}\n</Documents>",
-            ),
-            ("user", "{question}"),
-        ]
-    )
-    chain = (
-            {"context": retriever, "question": RunnablePassthrough()}
-            | prompt
-            | llm
-            | StrOutputParser()
-    )
-    text = chain.invoke(user_prompt)
-    return text, html
-
-
-def image2b64(image_file):
-    with open(image_file, "rb") as f:
-        image_b64 = base64.b64encode(f.read()).decode()
-        return image_b64
-
-
-def display_image(image_path):
-    with open(image_path, "rb") as image_file:
-        encoded_string = base64.b64encode(image_file.read()).decode()
-    html = f'<img src="data:image/png;base64,{encoded_string}" />'
-    return html
-
-
-def process_image(file, user_prompt):
-    # 处理图片输入
-    # 将图片进行编解码
-    image_b64 = image2b64(file)
-    # 将编码后的图像按照格式给到Microsoft Phi 3 vision, 利用其强大能力解析图片中的数据
-    chart_reading = ChatNVIDIA(model="ai-phi-3-vision-128k-instruct")
-    # 调用invoke方法并传入提示词
-    result = chart_reading.invoke(f'{user_prompt}: <img src="data:image/png;base64,{image_b64}" />')
-    return result.content
-
-
-def big_model_output(file, user_prompt):
-    # 获取文件扩展名
-    file_extension = os.path.splitext(file)[1].lower()
-
-    if file_extension == ".txt":
-        return process_text(file, user_prompt)
-    elif file_extension in [".png", ".jpg", ".jpeg"]:
-        image_html = display_image(file)  # 获取图像的HTML标签字符串
-        return process_image(file, user_prompt), image_html
-    else:
-        return "Invalid input type"
-
-
-iface = gr.Interface(
-    fn=big_model_output,
-    inputs=[
-        gr.File(),
-        gr.Textbox(lines=1)
-    ],
-    outputs=[
-        "text",  # 文本输出
-        gr.HTML()  # 图像输出
-    ],
-    title="多模态RAG对话AI智能体",
-    description="输入文字或图像，大模型会进行分析输出。"
-)
-
-iface.launch()
-
-```
-
-![](data\:image/gif;base64,R0lGODlhAQABAPABAP///wAAACH5BAEKAAAALAAAAAABAAEAAAICRAEAOw== "点击并拖拽以移动")
 
 # 四、项目成果与展示：
 
@@ -265,13 +159,9 @@ iface.launch()
 
 ## （二）功能演示
 
-### 1.首先看图片的识别效果。
+![image-20241226220704891](https://wangguijie-typora.oss-cn-chengdu.aliyuncs.com/img/image-20241226220704891.png)
 
-![](https://i-blog.csdnimg.cn/direct/1a0a37aec059492da73c24b6b144e5d1.png)![](data\:image/gif;base64,R0lGODlhAQABAPABAP///wAAACH5BAEKAAAALAAAAAABAAEAAAICRAEAOw== "点击并拖拽以移动")​编辑
-
-### 2.再看一看RAG文本的实现效果
-
-![](https://i-blog.csdnimg.cn/direct/d72c4ee695ca4432a9dd477d38c312d5.png)![](data\:image/gif;base64,R0lGODlhAQABAPABAP///wAAACH5BAEKAAAALAAAAAABAAEAAAICRAEAOw== "点击并拖拽以移动")​编辑
+![image-20241226221337644](https://wangguijie-typora.oss-cn-chengdu.aliyuncs.com/img/image-20241226221337644.png)
 
 # 五、项目总结与展望
 
@@ -293,4 +183,3 @@ iface.launch()
 
 4\. <https://github.com/kinfey/Microsoft-Phi-3-NvidiaNIMWorkshop>
 
-​
