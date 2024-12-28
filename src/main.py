@@ -25,6 +25,7 @@ conversation_history =[]
 
 analyzer_container = AnalyzerContainer()
 
+STAR_URL = os.environ.get("SHEILDS_START_URL","https://img.shields.io/github/stars/HuiyuanYan/gradio_ai_helper?style=plastic")
 
 
 def predict(message, history,max_history_rounds,temperature,modality,model):
@@ -64,9 +65,8 @@ def analyze(file):
 
 # 简化界面，移除手动选择文件类型
 with gr.Blocks(css="h1 { text-align: center; }") as iface:
-    gr.Markdown("# 🤖 AI智能体助手")
+    gr.Markdown(f"# 🤖 AI智能体助手    ![GitHub stars]({STAR_URL})")
     gr.Markdown("支持多模态对话，以及AI生成内容识别")
-    
     with gr.Tab("🗣️ AI对话 "):
         gr.ChatInterface(
             fn=predict,

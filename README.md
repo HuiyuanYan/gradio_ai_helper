@@ -22,6 +22,9 @@ OPENAI_BASE_URL="https://dashscope.aliyuncs.com/compatible-mode/v1"
 
 # gradio上传文件的临时目录，建议如下设置（即当前目录下tmp文件夹），否则会存到系统盘
 GRADIO_TEMP_DIR="./tmp"
+
+# 显示star数的小组件
+SHEILDS_START_URL="https://img.shields.io/github/stars/HuiyuanYan/gradio_ai_helper?style=plastic"
 ```
 
 # 运行

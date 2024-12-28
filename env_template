@@ -3,3 +3,4 @@ OPENAI_API_KEY="sk-xx"
 OPENAI_BASE_URL=""
 
 GRADIO_TEMP_DIR="./tmp"
+SHEILDS_START_URL="https://img.shields.io/github/stars/HuiyuanYan/gradio_ai_helper?style=plastic"
