@@ -63,9 +63,45 @@ def analyze(file):
     print(file)
     return analyzer_container.analyze(file)
 
+
+js = """
+function createGradioAnimation() {
+    var container = document.createElement('div');
+    container.id = 'gradio-animation';
+    container.style.fontSize = '2em';
+    container.style.fontWeight = 'bold';
+    container.style.textAlign = 'center';
+    container.style.marginBottom = '20px';
+
+    var text = '🤖 AI智能体助手';
+    for (var i = 0; i < text.length; i++) {
+        (function(i){
+            setTimeout(function(){
+                var letter = document.createElement('span');
+                letter.style.opacity = '0';
+                letter.style.transition = 'opacity 0.5s';
+                letter.innerText = text[i];
+
+                container.appendChild(letter);
+
+                setTimeout(function() {
+                    letter.style.opacity = '1';
+                }, 50);
+            }, i * 250);
+        })(i);
+    }
+
+    var gradioContainer = document.querySelector('.gradio-container');
+    gradioContainer.insertBefore(container, gradioContainer.firstChild);
+
+    return 'Animation created';
+}
+"""
+
 # 简化界面，移除手动选择文件类型
-with gr.Blocks(css="h1 { text-align: center; }") as iface:
-    gr.Markdown(f"# 🤖 AI智能体助手    ![GitHub stars]({STAR_URL})")
+with gr.Blocks(js=js) as iface:
+    iface.theme = gr.themes.Base()
+    gr.Markdown(f"#     ![GitHub stars]({STAR_URL})")
     gr.Markdown("支持多模态对话，以及AI生成内容识别")
     with gr.Tab("🗣️ AI对话 "):
         gr.ChatInterface(
