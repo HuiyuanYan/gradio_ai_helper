@@ -1,4 +1,12 @@
-!!!**本项目计划用作xjtu 2024秋 数据库系统原理及应用大作业，使用时请注意甄别。**
+# 基于Gradio构建的智能AI助手
+
+![python badge](https://img.shields.io/badge/python-3.12-blue)
+![python badge](https://img.shields.io/badge/gradio-5.9.1-orange)
+
+**!!!本项目计划用作xjtu 2024秋 数据库系统原理及应用大作业，使用时请注意甄别。**
+
++ 支持多模态大预言模型对话
++ 支持不同模态AIGC伪造内容识别
 
 ![](./demo/main.png)
 
@@ -38,7 +46,7 @@ python src/main.py
 两种模式的效果展示如下：
 ![](./demo/chat/demo1.png)
 
-![](./demo/recognition/text_demo.png)
+![](./demo/recognition/demo1.png)
 
 # 补全代码
 补全不同文件格式的analyze，请参考`src\analyzer\text_analyzer.py`里的实现，主要实现的是类下面的`_analyze`方法。

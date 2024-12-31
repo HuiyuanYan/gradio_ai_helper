@@ -40,7 +40,7 @@ def validate_file_format(file_path: str) -> Tuple[bool, str]:
     for media_type, formats in SUPPORTED_FORMATS.items():
         if ext in formats:
             return True, media_type
-    return False, ""
+    return False, ext
 
 
 def convert_message_dict_to_user_input(message:dict,model) -> list | str:
@@ -54,12 +54,13 @@ def convert_message_dict_to_user_input(message:dict,model) -> list | str:
                 {'text':message['text']}
             )
         for file in message['files']:
-            if file['mime_type'].startswith('audio'):
+            _, media_type = validate_file_format(file)
+            if media_type == 'audio':
                 user_input.append(
-                    {'audio':file['url']}
+                    {'audio':file}
                 )
             else:
-                raise ValueError(f"Unsupported file type: {file['mime_type']}")
+                raise ValueError(f"Unsupported file type: {media_type}")
         return user_input
     
     if model == "qwen-vl-max-0809":
@@ -72,22 +73,23 @@ def convert_message_dict_to_user_input(message:dict,model) -> list | str:
                 },
             )
         for file in message['files']:
-            if file['mime_type'].startswith('image'):
+            _, media_type = validate_file_format(file)
+            if media_type == 'image':
                 user_input.append(
                     {
                         'type':'image_url',
-                        'image_url':f"data:image/png;base64,{image_to_base64(file['path'])}"
+                        'image_url':f"data:image/png;base64,{image_to_base64(file)}"
                     }
                 )
-            elif file['mime_type'].startswith('video'):
+            elif media_type == 'video':
                 user_input.append(
                     {
                         'type':'video_url',
-                        'video_url':file['url']
+                        'video_url':file
                     }
                 )
             else:
-                raise ValueError(f"Unsupported file type: {file['mime_type']}")
+                raise ValueError(f"Unsupported file type: {media_type}")
         return user_input
 
     if model == "qwen-long":
