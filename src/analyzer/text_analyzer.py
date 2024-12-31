@@ -16,6 +16,7 @@ class TextAnalyzer(ContentAnalyzer):
         real_score = authenticity[0]['score']
         fake_score = 1.0 - real_score
         
+        # real score和 fake score都保留两位小数
         return {
             "real": real_score,
             "fake": fake_score
