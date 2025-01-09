@@ -5,7 +5,7 @@ from src.analyzer.content_analyzer import ContentAnalyzer
 class TextAnalyzer(ContentAnalyzer):
     def __init__(self):
         """Initialize the text detector model."""
-        self.text_detector = pipeline("text-classification", model="roberta-base-openai-detector")
+        self.text_detector = pipeline("text-classification", model="MayZhou/e5-small-lora-ai-generated-detector")
     
     def _analyze(self, file_path: str) -> Dict:
         """Analyze text content in the provided file."""

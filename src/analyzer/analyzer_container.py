@@ -2,7 +2,7 @@ from typing import Dict
 from src.analyzer.text_analyzer import TextAnalyzer
 from src.analyzer.image_analyzer import ImageAnalyzer
 from src.analyzer.audio_analyzer import AudioAnalyzer
-from src.analyzer.video_analyzer import VedioAnalyzer
+from src.analyzer.video_analyzer import VideoAnalyzer
 from src.utils import validate_file_format
 
 
@@ -13,7 +13,7 @@ class AnalyzerContainer:
             "text": TextAnalyzer(),
             "image": ImageAnalyzer(),
             "audio": AudioAnalyzer(),  # 如果你有音频分析器
-            "video": VedioAnalyzer()
+            "video": VideoAnalyzer()
         }
 
     def analyze(self, file_path: str) -> Dict:
