@@ -26,7 +26,6 @@
 
 ## 🎁 更新
 
-+ 2024.10.26 修复了一个bug，在使用`text`模式时，会出现`AttributeError: 'NoneType' object has no attribute 'text'`的错误。
 - [ ] [TODO] 构建更完善的配置文件，支持不同识别模型，更美观的界面。
 
 - [x] [2025/1/9] 初步构建Dockerfile, 支持Docker部署
