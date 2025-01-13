@@ -1,0 +1,12 @@
+default_history_len: 3
+default_temperature: 0.7
+default_llm: qwen-long
+deault_llm_type: text
+
+supported_llms:
+  text:
+    - qwen-long
+  image:
+    - qwen-vl-max-0809
+  audio:
+    - qwen-audio-turbo

@@ -1,0 +1,8 @@
+version: 0.0.1
+log_dir: ./logs
+shields_start_url: https://img.shields.io/github/stars/HuiyuanYan/gradio_ai_helper?style=plastic
+env:
+  HF_ENDPOINT: https://hf-mirror.com
+  GRADIO_TEMP_DIR: ./tmp
+  OPENAI_BASE_URL: https://dashscope.aliyuncs.com/compatible-mode/v1
+  OPENAI_API_KEY: sk-xxx

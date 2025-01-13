@@ -1,20 +1,61 @@
 import os
 from typing import Tuple
 import base64
-SUPPORTED_FORMATS = {
-    'image': ['.jpg', '.jpeg', '.png', '.webp'],
-    'video': ['.mp4', '.avi', '.webm'],
-    'audio': ['.mp3', '.wav'],
-    'text': ['.txt', '.doc', '.pdf']
-}
+import logging
+from logging.handlers import RotatingFileHandler
+from colorlog import ColoredFormatter
+from pathlib import Path
+from src.settings import Settings
 
-SUPPORTED_MODELS_DICT = {
-    "text" : ["qwen-long"],
-    "image" : ["qwen-vl-max-0809"],
-    "audio" : ["qwen-audio-turbo"],
-}
+SUPPORTED_FORMATS = Settings.analyzer_settings.get_supported_file_formats()
+SUPPORTED_MODELS = Settings.llm_settings.get_supported_models()
 
-MAX_FILE_NUM = 4
+MAX_FILE_NUM = Settings.analyzer_settings.max_file_num
+
+def get_logger(name='app.log', log_file='app.log', log_level=logging.INFO, max_bytes=1024*1024*5, backup_count=5):
+    """
+    获取一个配置好的 logger。
+
+    :param name: Logger 的名称。
+    :param log_file: 日志文件的路径。
+    :param log_level: 日志级别，默认为 INFO。
+    :param max_bytes: 日志文件的最大大小，超过后会自动轮转，默认为 5MB。
+    :param backup_count: 保留的旧日志文件数量，默认为 5。
+    :return: 配置好的 logger。
+    """
+    logger = logging.getLogger(name)
+    logger.setLevel(log_level)
+
+    file_handler = RotatingFileHandler(log_file, maxBytes=max_bytes, backupCount=backup_count)
+    file_handler.setLevel(log_level)
+    file_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    file_handler.setFormatter(file_formatter)
+
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(log_level)
+    console_formatter = ColoredFormatter(
+        "%(log_color)s%(asctime)s - %(name)s - %(levelname)s%(reset)s - %(message)s",
+        datefmt=None,
+        reset=True,
+        log_colors={
+            'DEBUG': 'cyan',
+            'INFO': 'green',
+            'WARNING': 'yellow',
+            'ERROR': 'red',
+            'CRITICAL': 'red,bg_white',
+        },
+        secondary_log_colors={},
+        style='%'
+    )
+    console_handler.setFormatter(console_formatter)
+
+    # 添加 handlers 到 logger
+    logger.addHandler(file_handler)
+    logger.addHandler(console_handler)
+
+    return logger
+
+logger = get_logger(log_file=str(Path(Settings.basic_settings.log_dir).absolute()/'app.log'))
 
 # 将图片转为base64
 def image_to_base64(image_path:str) -> str:
@@ -25,7 +66,7 @@ def image_to_base64(image_path:str) -> str:
 def get_all_supported_models():
     # 获取所有支持的模型()
     models = []
-    for model_list in SUPPORTED_MODELS_DICT.values():
+    for model_list in SUPPORTED_MODELS.values():
         models.extend(model_list)
     # set去重
     models = list(set(models))
@@ -43,11 +84,11 @@ def validate_file_format(file_path: str) -> Tuple[bool, str]:
     return False, ext
 
 
-def convert_message_dict_to_user_input(message:dict,model) -> list | str:
+def convert_message_dict_to_user_input(message:dict,modality:str) -> list | str:
     """将消息字典转换为模型输入"""
-    assert model in get_all_supported_models(), "model not supported"
+    assert modality in SUPPORTED_MODELS.keys(), f"modality {modality} not supported"
 
-    if model == "qwen-audio-turbo":
+    if modality == "audio":
         user_input = []
         if message['text']:
             user_input.append(
@@ -63,7 +104,7 @@ def convert_message_dict_to_user_input(message:dict,model) -> list | str:
                 raise ValueError(f"Unsupported file type: {media_type}")
         return user_input
     
-    if model == "qwen-vl-max-0809":
+    if modality == "image":
         user_input = []
         if message['text']:
             user_input.append(
@@ -92,7 +133,7 @@ def convert_message_dict_to_user_input(message:dict,model) -> list | str:
                 raise ValueError(f"Unsupported file type: {media_type}")
         return user_input
 
-    if model == "qwen-long":
+    if modality == "text":
         user_input = message['text']
 
     return user_input

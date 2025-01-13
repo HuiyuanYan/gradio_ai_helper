@@ -26,7 +26,11 @@
 
 ## 🎁 更新
 
-- [ ] [TODO] 构建更完善的配置文件，支持不同识别模型，更美观的界面。
+- [x] [2025/1/14] 小更新，为项目增加了日志功能。
+
+- [x] [2025/1/13] 支持自定义pipeline识别伪造文件内容，现在每种识别模式均可以选择`huggingface`官方的`pipeline`和自己定义的`CustomPipeline`了，自定义pipeline请参见`src/pipeline`文件夹相关逻辑，并且在`cfg/analyzer.yaml`文件中进行配置。
+
+- [x] [2025/1/11] 现在所有配置均可以在cfg文件夹下进行配置了！参数详情请参见`cfg`文件夹下的三个yaml文件。
 
 - [x] [2025/1/9] 初步构建Dockerfile, 支持Docker部署
 
@@ -59,21 +63,85 @@ pip install -r requirements.txt
 
 # 📋 配置环境变量
 
-将目录下`env_template`复制一份，重命名为`.env`（注意前面有点），然后修改：
-```bash
-# 设置hf-endpoint，加速模型下载访问
-HF_ENDPOINT='https://hf-mirror.com'
-
-# 设置openai key和base url，如不使用对话功能可忽略
-OPENAI_API_KEY="sk-xx"
-OPENAI_BASE_URL="https://dashscope.aliyuncs.com/compatible-mode/v1"
-
-# gradio上传文件的临时目录，建议如下设置（即当前目录下tmp文件夹），否则会存到系统盘
-GRADIO_TEMP_DIR="./tmp"
-
-# 显示star数的小组件
-SHEILDS_START_URL="https://img.shields.io/github/stars/HuiyuanYan/gradio_ai_helper?style=plastic"
+在`cfg/basic.yaml`文件中配置相关环境变量：
+```yaml
+# basic.yaml
+version: 0.0.1
+log_dir: ./logs
+shields_start_url: https://img.shields.io/github/stars/HuiyuanYan/gradio_ai_helper?style=plastic
+env:
+  HF_ENDPOINT: https://hf-mirror.com
+  GRADIO_TEMP_DIR: ./tmp
+  OPENAI_BASE_URL: https://dashscope.aliyuncs.com/compatible-mode/v1
+  OPENAI_API_KEY: sk-xxx
 ```
+
+在`cfg/llms.yaml`进行大语言模型相关配置：
+```yaml
+# llms.yaml
+default_history_len: 3
+default_temperature: 0.7
+default_llm: qwen-long
+deault_llm_type: text
+
+supported_llms:
+  text:
+    - qwen-long
+  image:
+    - qwen-vl-max-0809
+  audio:
+    - qwen-audio-turbo
+```
+
+在`cfg/analyzer.yaml`进行伪造内容识别相关配置（在2025/1/13的更新中，已经可以支持自定义pipeline，相关逻辑参见`src/pipeline`文件夹）：
+```yaml
+# analyzer.yaml
+max_file_num: 4
+supported_file_formats:
+  image:
+    - .jpg
+    - .jpeg
+    - .png
+    - .webp
+  video:
+    - .mp4
+    - .avi
+    - .webm
+  audio:
+    - .mp3
+    - .wav
+  text:
+    - .md
+    - .txt
+    - .doc
+    - .pdf
+
+image_analyzer:
+  pipeline: hf_pipeline
+  args:
+    task: image-classification
+    model: umm-maybe/AI-image-detector
+
+text_analyzer:
+  pipeline: hf_pipeline
+  args:
+    task: text-classification
+    model: MayZhou/e5-small-lora-ai-generated-detector
+
+audio_analyzer:
+  pipeline: deep4snet_audio_pipeline
+  args:
+    model_path: ./models/deep4snet/model_Deep4SNet.h5
+    weights_path: ./models/deep4snet/weights_Deep4SNet.h5
+  
+video_analyzer:
+  pipeline: deep_fake_video_pipeline
+  args:
+    task: image-classification
+    model: dima806/deepfake_vs_real_image_detection
+```
+
+
 
 # ⏰ 运行
 ```bash

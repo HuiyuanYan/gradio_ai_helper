@@ -1,38 +1,34 @@
 import sys,os
 sys.path.append(os.getcwd())
-from dotenv import load_dotenv
-load_dotenv()
-
+from src.settings import Settings
+from src.utils import logger
 import gradio as gr
 from src.analyzer import AnalyzerContainer
-# 初始化 AnalyzerContainer
 
-import openai
+
 from openai import OpenAI
-openai.api_key = os.environ.get("OPENAI_API_KEY","")
-openai.base_url = os.environ.get("OPENAI_BASE_URL","")
-client = OpenAI(
-    api_key=openai.api_key,
-    base_url=openai.base_url
-)
+
 from src.utils import (
     SUPPORTED_FORMATS,
     MAX_FILE_NUM,
-    SUPPORTED_MODELS_DICT,
+    SUPPORTED_MODELS,
     get_all_supported_models,
     generate_html_for_file,
     convert_message_dict_to_user_input
+)
+
+client = OpenAI(
+    api_key=Settings.basic_settings.env["OPENAI_API_KEY"],
+    base_url=Settings.basic_settings.env["OPENAI_BASE_URL"]
 )
 conversation_history =[]
 
 analyzer_container = AnalyzerContainer()
 
-STAR_URL = os.environ.get("SHEILDS_START_URL","https://img.shields.io/github/stars/HuiyuanYan/gradio_ai_helper?style=plastic")
-
 
 def predict(message, history,max_history_rounds,temperature,modality,model):
-    print(f'Message:{message}\nHistory:{history}')
-    assert model in SUPPORTED_MODELS_DICT[modality], f"model {model} not supported for modality {modality}"
+    logger.info(f"Message:{message}\nHistory:{history}Temperature:{temperature}\nModality:{modality}\nModel:{model}")
+    assert model in SUPPORTED_MODELS[modality], f"model {model} not supported for modality {modality}"
 
     global conversation_history, client
     # 检查历史对话记录的长度是否超过最大允许的轮次
@@ -45,7 +41,7 @@ def predict(message, history,max_history_rounds,temperature,modality,model):
         conversation_history.append(history[-1])
 
     # 构建消息列表，将历史对话记录转换为openai格式
-    user_content = convert_message_dict_to_user_input(message,model)
+    user_content = convert_message_dict_to_user_input(message,modality)
     
     # 将用户消息添加到消息列表中
     conversation_history.append({"role": "user", "content": user_content})
@@ -107,8 +103,9 @@ function createGradioAnimation() {
 """
 
 # 简化界面，移除手动选择文件类型
+logger.info(f"Starting Gradio AI Helper_{Settings.basic_settings.version}...")
 with gr.Blocks(js=js) as iface:
-    gr.Markdown(f"#     ![GitHub stars]({STAR_URL})")
+    gr.Markdown(f"#     ![GitHub stars]({Settings.basic_settings.shields_start_url})")
     gr.Markdown("支持多模态对话，以及AIGC伪造内容识别")
     with gr.Tab("🗣️ AI对话 "):
         gr.ChatInterface(
@@ -116,10 +113,10 @@ with gr.Blocks(js=js) as iface:
             type="messages",
             multimodal=True,
             additional_inputs=[
-                gr.Slider(1, 10, value=1, label="最大历史交互轮次", step=1),
-                gr.Slider(0,1,value=0.7,label="温度，越大越随机"),
-                gr.Dropdown(SUPPORTED_MODELS_DICT.keys(),value='image',label="模态，对话开始后不要改变该参数！"),
-                gr.Dropdown(get_all_supported_models(),value='qwen-vl-max-0809',label="模型，对话开始后不要改变，因为不同模型的传参格式可能不一样！"),
+                gr.Slider(1, 10, value=Settings.llm_settings.default_history_len, label="最大历史交互轮次", step=1),
+                gr.Slider(0,1,value=Settings.llm_settings.default_temperature,label="温度，越大越随机"),
+                gr.Dropdown(SUPPORTED_MODELS.keys(),value=Settings.llm_settings.default_llm_type,label="模态，对话开始后不要改变该参数！"),
+                gr.Dropdown(get_all_supported_models(),value=Settings.llm_settings.default_llm,label="模型，对话开始后不要改变，因为不同模型的传参格式可能不一样！"),
             ]
         )
     with gr.Tab("🔍 内容识别"):

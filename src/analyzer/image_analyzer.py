@@ -1,19 +1,17 @@
-from transformers import pipeline
 from src.analyzer.content_analyzer import ContentAnalyzer
 from typing import Dict
-
+from src.pipeline import get_pipeline
 class ImageAnalyzer(ContentAnalyzer):
-    def __init__(self):
-        """Initialize the image analysis model (if needed)."""
-        self.image_detector = pipeline(
-            "image-classification",
-            model="umm-maybe/AI-image-detector"
+    def __init__(self,pipeline_type,**args):
+        """Initialize the text detector model."""
+        self.pipeline = get_pipeline(
+            pipeline_type=pipeline_type,
+            **args
         )
-        pass  # You can initialize your image model here.
     
     def _analyze(self, file_path: str) -> Dict:
         """Analyze image content in the provided file."""
-        authenticity = self.image_detector(file_path)
+        authenticity = self.pipeline(file_path)
         
         real_score = authenticity[0]['score']
         fake_score = 1.0 - real_score

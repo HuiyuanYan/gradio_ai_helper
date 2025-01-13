@@ -1,0 +1,43 @@
+max_file_num: 4
+supported_file_formats:
+  image:
+    - .jpg
+    - .jpeg
+    - .png
+    - .webp
+  video:
+    - .mp4
+    - .avi
+    - .webm
+  audio:
+    - .mp3
+    - .wav
+  text:
+    - .md
+    - .txt
+    - .doc
+    - .pdf
+
+image_analyzer:
+  pipeline: hf_pipeline
+  args:
+    task: image-classification
+    model: umm-maybe/AI-image-detector
+
+text_analyzer:
+  pipeline: hf_pipeline
+  args:
+    task: text-classification
+    model: MayZhou/e5-small-lora-ai-generated-detector
+
+audio_analyzer:
+  pipeline: deep4snet_audio_pipeline
+  args:
+    model_path: ./models/deep4snet/model_Deep4SNet.h5
+    weights_path: ./models/deep4snet/weights_Deep4SNet.h5
+  
+video_analyzer:
+  pipeline: deep_fake_video_pipeline
+  args:
+    task: image-classification
+    model: dima806/deepfake_vs_real_image_detection
